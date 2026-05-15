@@ -18,20 +18,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Install Dependencies
-        run: npm install --platform=linux --arch=x64 --legacy-peer-deps
+        # We add 'force' to bypass the binding conflict and 'platform' to ensure Linux files are used
+        run: |
+          npm install --platform=linux --arch=x64 --force
+          npm install @tailwindcss/oxide-linux-x64-musl --force
 
       - name: Build Project
         run: npm run build
         env:
-          # This pulls your keys from GitHub Secrets
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_PAYSTACK_PUBLIC_KEY: ${{ secrets.VITE_PAYSTACK_PUBLIC_KEY }}
-
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist # Change to 'build' if not using Vite
-          branch: gh-pages
