@@ -21,7 +21,7 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --platform=linux --arch=x64 --legacy-peer-deps
 
       - name: Build Project
         run: npm run build
