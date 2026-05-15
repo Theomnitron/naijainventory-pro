@@ -9,7 +9,7 @@ import {
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAIBRVEijAYjaz8KTnazW4jPjKoxE47JDs",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "naijainventorypro.firebaseapp.com",
   projectId: "naijainventorypro",
   storageBucket: "naijainventorypro.firebasestorage.app",
