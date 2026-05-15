@@ -1,0 +1,8 @@
+{
+  "name": "NaijaInventory Pro",
+  "description": "A high-contrast inventory management system designed for extreme legibility and ease of use in Nigerian retail environments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

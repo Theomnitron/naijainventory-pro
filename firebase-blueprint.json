@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "UserProfile",
+      "description": "Information about the business owner and their license.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "businessName": { "type": "string" },
+        "state": { "type": "string" },
+        "city": { "type": "string" },
+        "businessType": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "masterKey": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "businessAddress": { "type": "string" },
+        "businessPhone": { "type": "string" },
+        "adminPin": { "type": "string" },
+        "paystackReference": { "type": "string" },
+        "welcomed": { "type": "boolean" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["fullName", "businessName", "email", "masterKey", "isPaid"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Inventory item with brand, model and variants.",
+      "type": "object",
+      "properties": {
+        "brand": { "type": "string" },
+        "model": { "type": "string" },
+        "category": { "type": "string" },
+        "variants": { "type": "array" }
+      }
+    },
+    "AuditEntry": {
+      "title": "AuditEntry",
+      "description": "Log of sales or restock activities.",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number" },
+        "type": { "type": "string" },
+        "productName": { "type": "string" },
+        "variantName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "price": { "type": "number" },
+        "discount": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profile document."
+    },
+    "users/{userId}/products/{productId}": {
+      "schema": "Product",
+      "description": "Encrypted product documents."
+    },
+    "users/{userId}/audit/{auditId}": {
+      "schema": "AuditEntry",
+      "description": "Encrypted audit log entries."
+    }
+  }
+}
