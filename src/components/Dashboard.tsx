@@ -11,35 +11,52 @@ interface DashboardProps {
 export default function Dashboard({ onTabChange }: DashboardProps) {
   const { products, auditLog, setInventoryFilter, isLoading } = useInventory();
   
-  const { todaySales, totalDiscounts, totalSurplus } = useMemo(() => {
-    if (isLoading) return { todaySales: 0, totalDiscounts: 0, totalSurplus: 0 };
-    const today = new Date();
+  const { todaySales, monthlySales, totalDiscounts, totalSurplus } = useMemo(() => {
+    if (isLoading) return { todaySales: 0, monthlySales: 0, totalDiscounts: 0, totalSurplus: 0 };
+    const now = new Date();
+    
+    // Start of today
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     const startOfToday = today.getTime();
 
+    // Start of month
+    const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonth = month.getTime();
+
     const salesEntries = auditLog.filter(entry => 
       entry.type === 'Sale' && 
-      entry.timestamp >= startOfToday &&
       !entry.isVoided
     );
     
     let sales = 0;
+    let mSales = 0;
     let discounts = 0;
     let surplus = 0;
 
     salesEntries.forEach(entry => {
-      sales += (entry.price || 0);
-      const d = entry.discount || 0;
-      if (d > 0) discounts += d;
-      if (d < 0) surplus += Math.abs(d);
+      const price = entry.price || 0;
+      const ts = entry.timestamp || 0;
+      
+      if (ts >= startOfToday) {
+        sales += price;
+        const d = entry.discount || 0;
+        if (d > 0) discounts += d;
+        if (d < 0) surplus += Math.abs(d);
+      }
+
+      if (ts >= startOfMonth) {
+        mSales += price;
+      }
     });
 
     return {
       todaySales: sales,
+      monthlySales: mSales,
       totalDiscounts: discounts,
       totalSurplus: surplus
     };
-  }, [auditLog]);
+  }, [auditLog, isLoading]);
 
   const totalStockValue = products.reduce((acc, p) => 
     acc + p.variants.reduce((vAcc, v) => vAcc + (v.price * v.stock), 0), 0
@@ -71,7 +88,7 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
     },
     { label: 'Out of Stock', value: outOfStockCount.toString(), active: false, filter: 'Out of Stock' },
     { label: 'Low Stock', value: lowStockCount.toString(), active: false, filter: 'Low Stock' },
-    { label: 'Monthly Rev', value: formatNaira(todaySales), active: false },
+    { label: 'Monthly Rev', value: formatNaira(monthlySales), active: false },
   ];
 
   const handleMetricClick = (filter?: string) => {
