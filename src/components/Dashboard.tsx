@@ -10,11 +10,11 @@ interface DashboardProps {
 
 export default function Dashboard({ onTabChange }: DashboardProps) {
   const { products, auditLog, setInventoryFilter, isLoading } = useInventory();
-  
+
   const { todaySales, monthlySales, totalDiscounts, totalSurplus } = useMemo(() => {
     if (isLoading) return { todaySales: 0, monthlySales: 0, totalDiscounts: 0, totalSurplus: 0 };
     const now = new Date();
-    
+
     // Start of today
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
@@ -22,13 +22,14 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
 
     // Start of month
     const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    month.setHours(0, 0, 0, 0);
     const startOfMonth = month.getTime();
 
-    const salesEntries = auditLog.filter(entry => 
-      entry.type === 'Sale' && 
+    const salesEntries = auditLog.filter(entry =>
+      entry.type === 'Sale' &&
       !entry.isVoided
     );
-    
+
     let sales = 0;
     let mSales = 0;
     let discounts = 0;
@@ -36,8 +37,10 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
 
     salesEntries.forEach(entry => {
       const price = entry.price || 0;
-      const ts = entry.timestamp || 0;
-      
+
+      // FIX: Force parse the timestamp to millisecond integer to avoid string mismatch bugs
+      const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
+
       if (ts >= startOfToday) {
         sales += price;
         const d = entry.discount || 0;
@@ -58,23 +61,23 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
     };
   }, [auditLog, isLoading]);
 
-  const totalStockValue = products.reduce((acc, p) => 
+  const totalStockValue = products.reduce((acc, p) =>
     acc + p.variants.reduce((vAcc, v) => vAcc + (v.price * v.stock), 0), 0
   );
 
-  const lowStockCount = products.reduce((acc, p) => 
+  const lowStockCount = products.reduce((acc, p) =>
     acc + p.variants.filter(v => v.stock > 0 && v.stock < 5).length, 0
   );
 
-  const outOfStockCount = products.reduce((acc, p) => 
+  const outOfStockCount = products.reduce((acc, p) =>
     acc + p.variants.filter(v => v.stock === 0).length, 0
   );
 
   const metrics = [
-    { 
-      label: 'Today Sales', 
-      value: formatNaira(todaySales), 
-      active: true, 
+    {
+      label: 'Today Sales',
+      value: formatNaira(todaySales),
+      active: true,
       subValue: (
         <div className="flex flex-col gap-0.5 mt-2">
           {totalDiscounts > 0 && (
@@ -102,17 +105,16 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
     <div id="dashboard-container" className="p-6 pb-24 transition-colors">
       <h1 id="dashboard-title" className="text-4xl font-black text-black dark:text-white uppercase tracking-tighter mb-2">Summary</h1>
       <p className="text-slate-500 dark:text-slate-400 text-xs font-mono uppercase mb-8">Business Health Metrics</p>
- 
+
       <div id="metrics-grid" className="grid grid-cols-2 gap-4">
         {metrics.map((item, i) => (
-          <button 
-            key={i} 
+          <button
+            key={i}
             onClick={() => handleMetricClick(item.filter)}
-            className={`p-4 border transition-colors rounded-xl flex flex-col justify-between text-left group ${
-              item.active 
-                ? 'bg-black dark:bg-white border-black dark:border-white' 
+            className={`p-4 border transition-colors rounded-xl flex flex-col justify-between text-left group ${item.active
+                ? 'bg-black dark:bg-white border-black dark:border-white'
                 : 'bg-white dark:bg-black border-slate-200 dark:border-slate-800'
-            } ${item.filter ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
+              } ${item.filter ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
           >
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -146,7 +148,7 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
         </div>
         <p className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-600 tracking-widest">End-to-End Encrypted</p>
         <p className="max-w-[200px] text-center text-[8px] font-medium text-slate-400 dark:text-slate-600 uppercase leading-relaxed">
-          Your inventory data is encrypted before it leaves this device. 
+          Your inventory data is encrypted before it leaves this device.
           Only you can see these names and prices.
         </p>
       </div>
