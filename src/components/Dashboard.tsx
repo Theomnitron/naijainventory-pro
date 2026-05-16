@@ -38,8 +38,29 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
     salesEntries.forEach(entry => {
       const price = entry.price || 0;
 
-      // FIX: Force parse the timestamp to millisecond integer to avoid string mismatch bugs
-      const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
+      let ts = 0;
+      // Explicitly cast to 'any' temporarily so TypeScript lets us check the type safely
+      const rawTimestamp = (entry as any).timestamp;
+
+      if (rawTimestamp) {
+        if (typeof rawTimestamp === 'string') {
+          // Cleans "May 14, 2026 at 5:45:25 PM UTC+1" into something JS can parse
+          const cleanFormat = rawTimestamp
+            .replace(/\sat\s/, ' ')      // Removes the word "at" safely
+            .replace('UTC+1', '+0100');  // Converts timezone to standard offset
+          ts = new Date(cleanFormat).getTime();
+        } else if (typeof rawTimestamp === 'number') {
+          ts = rawTimestamp;
+        } else if (rawTimestamp instanceof Date) {
+          ts = rawTimestamp.getTime();
+        } else if (rawTimestamp && typeof rawTimestamp === 'object' && 'seconds' in rawTimestamp) {
+          // Fallback if it's a native Firestore Timestamp object
+          ts = rawTimestamp.seconds * 1000;
+        }
+      }
+
+      // Guard against invalid date strings resulting in NaN
+      if (isNaN(ts)) ts = 0;
 
       if (ts >= startOfToday) {
         sales += price;
@@ -112,8 +133,8 @@ export default function Dashboard({ onTabChange }: DashboardProps) {
             key={i}
             onClick={() => handleMetricClick(item.filter)}
             className={`p-4 border transition-colors rounded-xl flex flex-col justify-between text-left group ${item.active
-                ? 'bg-black dark:bg-white border-black dark:border-white'
-                : 'bg-white dark:bg-black border-slate-200 dark:border-slate-800'
+              ? 'bg-black dark:bg-white border-black dark:border-white'
+              : 'bg-white dark:bg-black border-slate-200 dark:border-slate-800'
               } ${item.filter ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
           >
             <div>
